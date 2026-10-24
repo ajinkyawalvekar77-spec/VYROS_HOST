@@ -1,0 +1,65 @@
+:root {
+  font-family: "DM Sans", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #182338;
+  background: #f4f6fa;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  --font-display: "Manrope", "DM Sans", sans-serif;
+  --ink: #182338;
+  --muted: #77839a;
+  --soft-muted: #98a2b3;
+  --line: #e8ebf1;
+  --line-strong: #dce2eb;
+  --surface: #ffffff;
+  --surface-soft: #f8f9fc;
+  --canvas: #f4f6fa;
+  --primary: #536fe0;
+  --primary-dark: #405bc7;
+  --primary-soft: #eef1ff;
+  --teal: #168e86;
+  --teal-soft: #e7f6f3;
+  --violet: #8059c8;
+  --violet-soft: #f2edfc;
+  --green: #20896d;
+  --green-soft: #e7f5ef;
+  --amber: #ad761e;
+  --amber-soft: #fff5e4;
+  --red: #bd4e57;
+  --red-soft: #fff0f0;
+  --radius-sm: 8px;
+  --radius: 13px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --shadow-sm: 0 2px 8px rgba(27, 41, 68, .045);
+  --shadow-card: 0 7px 24px rgba(27, 41, 68, .045), 0 1px 3px rgba(27, 41, 68, .03);
+  --shadow-float: 0 18px 50px rgba(27, 41, 68, .12);
+  --ease: cubic-bezier(.2, .75, .25, 1);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ink: #edf1f9;
+  --muted: #a6b0c2;
+  --soft-muted: #818ca0;
+  --line: #283247;
+  --line-strong: #36435b;
+  --surface: #1b2435;
+  --surface-soft: #202b3e;
+  --canvas: #131b2a;
+  --primary: #879aff;
+  --primary-dark: #9eacff;
+  --primary-soft: #293453;
+  --teal: #58c7b8;
+  --teal-soft: #1e3a3b;
+  --violet: #b49ae9;
+  --violet-soft: #332c4a;
+  --green: #66c9a7;
+  --green-soft: #1d3c38;
+  --amber: #e5b863;
+  --amber-soft: #3c3426;
+  --red: #ed8890;
+  --red-soft: #402c37;
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, .12);
+  --shadow-card: 0 7px 24px rgba(0, 0, 0, .12);
+  --shadow-float: 0 18px 50px rgba(0, 0, 0, .35);
+}

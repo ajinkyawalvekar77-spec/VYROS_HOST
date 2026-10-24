@@ -1,5 +1,29 @@
 # Optiqo AI/ML engine
 
+## FastAPI backend and Vercel
+
+This repository also includes the Optiqo API integration in
+`optiqo_backend/`. The Vercel-discoverable entry point is the repository-root
+`main.py`, exporting the existing FastAPI application as `app`. For a Vercel
+project created from this repository, set **Root Directory** to `.` (the
+repository root); no `vercel.json` routing file is required. `.python-version`
+selects Python 3.12, and `requirements.txt` includes both engine and API
+dependencies.
+
+For deployment, configure `FIREBASE_PROJECT_ID` and
+`OPTIQO_CORS_ORIGINS` in the Vercel project environment to match the Firebase
+project and frontend origins. The bundled engine is discovered relative to the
+repository root by default; `OPTIQO_ENGINE_PATH` can override it. The backend
+uses SQLite run records under `/tmp` when `VERCEL=1`; Vercel temporary storage
+is not durable or shared across instances, so run history is not persistent in
+production. Configure an external persistent store before depending on run
+history.
+
+The root `main.py` import and local API tests can verify application discovery
+and local engine integration, but do not verify a Vercel deployment or its
+native solver/forecast dependencies. Those require a Vercel build and runtime
+smoke test.
+
 Optiqo is a Python library for demand forecasting, batch eligibility, inventory
 allocation, independent verification, explanations, and offline evaluation.
 This directory is the `aiml` package root. Backend APIs, databases, and UI are

@@ -23,6 +23,9 @@ Vite serves the frontend at `http://127.0.0.1:5173`. Development requests to
 `.env` to change this proxy destination. For a separately hosted frontend or
 production build, set `VITE_API_BASE_URL` to the backend origin, for example
 `http://127.0.0.1:8000`; the variable is a public API origin, never a secret.
+The production build does not use Vite's development proxy. Configure the
+backend origin or a same-origin `/api` reverse proxy in the hosting
+environment.
 Backend CORS currently allows the local Vite origin `http://127.0.0.1:5173`.
 
 ## Backend startup
@@ -61,9 +64,10 @@ timeouts, abort signals, backend error parsing, and downloads.
 | API/engine connection | `GET /api/health` |
 | Seeded dataset | `GET /api/demo-data?seed=…&profile=compact` |
 | Dataset quality report | `POST /api/data/validate` |
+| Active-dataset risk indicators | `POST /api/risk/dataset` |
 | Forecast | `POST /api/forecast` |
 | Plan, checker, explanations | `POST /api/plan` |
-| Demo or run-linked measures | `GET /api/risk?seed=…` or `GET /api/risk?run_id=…` |
+| Active-dataset, demo, or run-linked measures | `POST /api/risk/dataset`, `GET /api/risk?seed=…`, or `GET /api/risk?run_id=…` |
 | Chronological policy replay | `POST /api/backtest` |
 | Persisted run details | `GET /api/runs/{run_id}` |
 | Run downloads | `GET /api/runs/{run_id}/export?format=json|csv` |
@@ -81,9 +85,29 @@ performance metrics or run results are synthesized by the frontend.
   recommendation evidence, chronological backtest, and persisted run detail.
 - Light/dark theme toggle, responsive navigation, search and filters, status
   and error states, and downloadable backend run exports.
-- JSON upload is supported only for dataset objects matching the backend
-  contract. Frontend file limit is 10 MiB. CSV upload is not supported by the
-  current backend.
+- The Data Validation page can download a backend-generated demo JSON file and
+  upload JSON or CSV datasets (10 MiB frontend limit). JSON files containing
+  the full engine tables are validated by the backend before forecasting.
+  CSV files are for demand forecasting only and must contain exactly
+  `sku_id`, `destination_id`, `demand_date` (`YYYY-MM-DD`), and `quantity`.
+  The backend validates uploaded demand history with the `demand_only` scope
+  before calling `POST /api/forecast`; invalid data are not forecast.
+  Predictions,
+  model/fallback information, and the persisted run reference are returned by
+  the real backend engine and shown on the upload page and Overview. CSV
+  uploads do not provide inventory, lanes, or capacities, so they cannot be
+  used for allocation or full cross-table validation.
+- The Risk Overview calculates indicators from the currently loaded dataset
+  using the protected `POST /api/risk/dataset` route. It no longer silently
+  prefers a stale prior backtest when a dataset is loaded. Results include
+  forecast intervals and eligible network-stock comparisons only when the
+  required source tables are available; no weighted risk score is generated.
+- Allocation requires uploaded demand history plus non-empty inventory batches,
+  eligible lanes, and transport costs. Backtesting additionally requires
+  capacities and held-out `evaluation_actuals` for each selected evaluation
+  day after `as_of`. The planning pages check these prerequisites before
+  submitting, and direct users to upload a complete JSON dataset instead of
+  sending an incomplete request or inventing missing operational data.
 
 ## Authentication status
 

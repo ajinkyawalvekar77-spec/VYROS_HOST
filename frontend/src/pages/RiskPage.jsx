@@ -5,6 +5,27 @@ import { useApp } from "../context/AppContext";
 import { number } from "../utils/format";
 import { Button, Card, DataTable, EmptyState, ErrorNotice, LoadingState, PageHeader, SearchInput, StatusBadge } from "../components/UI";
 
+const RISK_DATASET_FIELDS = [
+  "as_of",
+  "synthetic",
+  "seed",
+  "demand_history",
+  "inventory_batches",
+  "lanes",
+  "transport_costs",
+  "capacities",
+  "sku_min_shelf_life_days",
+  "warehouse_receipts",
+];
+
+function riskPayload(dataset) {
+  return Object.fromEntries(
+    RISK_DATASET_FIELDS
+      .filter((field) => field in dataset)
+      .map((field) => [field, dataset[field]]),
+  );
+}
+
 export default function RiskPage() {
   const { demoData, runs, backtest, notify } = useApp();
   const [data, setData] = useState(null);
@@ -20,7 +41,9 @@ export default function RiskPage() {
     setLoading(true);
     setError(null);
     try {
-      const result = await api.risk(runId ? { runId } : { seed: demoData?.seed || 42 });
+      const result = demoData
+        ? await api.riskForDataset(riskPayload(demoData))
+        : await api.risk(runId ? { runId } : { seed: 42 });
       setData(result);
     } catch (caught) {
       setError(caught);
@@ -32,10 +55,18 @@ export default function RiskPage() {
 
   useEffect(() => {
     const controller = new AbortController();
-    api.risk(latestBacktest ? { runId: latestBacktest, signal: controller.signal } : { seed: demoData?.seed || 42, signal: controller.signal })
+    setLoading(true);
+    setError(null);
+    setData(null);
+    const request = demoData
+      ? api.riskForDataset(riskPayload(demoData), { signal: controller.signal })
+      : latestBacktest
+        ? api.risk({ runId: latestBacktest, signal: controller.signal })
+        : api.risk({ seed: 42, signal: controller.signal });
+    request
       .then(setData).catch((caught) => { if (caught.code !== "aborted") setError(caught); }).finally(() => setLoading(false));
     return () => controller.abort();
-  }, [latestBacktest, demoData?.seed]);
+  }, [latestBacktest, demoData]);
 
   const indicators = data?.indicators || [];
   const filtered = useMemo(() => {
@@ -65,8 +96,8 @@ export default function RiskPage() {
 
   return (
     <div className="page-stack">
-      <PageHeader eyebrow="Exceptions & exposure" title="Risk overview" description="Measured indicators from the synthetic network or a completed backtest run. No composite risk score is generated." actions={<Button variant="outline" icon={ShieldCheck} onClick={() => load(latestBacktest || null)} disabled={loading}>Refresh indicators</Button>} />
-      <div className="transparency-strip"><span className="transparency-dot" /><strong>{data?.synthetic ? "SYNTHETIC INDICATORS" : data?.run_id ? "RUN-LINKED MEASURES" : "LIVE API"}</strong><span>{data?.run_id ? `Source run ${data.run_id}` : data?.indicator_scope || "Measured API indicators"}</span></div>
+      <PageHeader eyebrow="Exceptions & exposure" title="Risk overview" description="Measured indicators from the active dataset or a completed run. No composite risk score is generated." actions={<Button variant="outline" icon={ShieldCheck} onClick={() => load(latestBacktest || null)} disabled={loading}>Refresh indicators</Button>} />
+      <div className="transparency-strip"><span className="transparency-dot" /><strong>{data?.dataset_id ? data.synthetic ? "SYNTHETIC DATASET INDICATORS" : "UPLOADED DATASET INDICATORS" : data?.run_id ? data.synthetic ? "SYNTHETIC RUN MEASURES" : "RUN-LINKED MEASURES" : data?.synthetic ? "SYNTHETIC DEMO INDICATORS" : "MEASURED API INDICATORS"}</strong><span>{data?.dataset_id ? `Dataset ${data.dataset_id.slice(0, 12)} · ${data.indicator_scope}` : data?.run_id ? `Source run ${data.run_id} · ${data.indicator_scope || ""}` : data?.indicator_scope || "Measured API indicators"}</span></div>
       {data?.risk_score == null && <div className="notice notice-info"><ShieldCheck size={17} /><span>No weighted risk score or inferred severity is shown. Indicators are reported in their source units; unsupported exposure measures are listed below.</span></div>}
       <ErrorNotice error={error} onRetry={() => load(latestBacktest || null)} />
       {loading && !data ? <LoadingState label="Loading risk indicators from the backend…" /> : <>

@@ -1,16 +1,19 @@
 import { Activity, AlertTriangle, Download, Play, ShieldCheck, Timer } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { api } from "../services/api";
 import { useApp } from "../context/AppContext";
 import { number, percent } from "../utils/format";
 import { Button, Card, DataTable, EmptyState, ErrorNotice, MetricCard, PageHeader, StatusBadge } from "../components/UI";
+import { backtestInput } from "../utils/workflowInputs";
 
 export default function BacktestPage() {
   const { demoData, setDemoData, backtest, setBacktest, rememberRun, notify } = useApp();
   const [days, setDays] = useState(56);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const inputStatus = demoData ? backtestInput(demoData, days) : null;
 
   async function run() {
     setLoading(true);
@@ -18,8 +21,13 @@ export default function BacktestPage() {
     try {
       const data = demoData || await api.getDemoData({ seed: 71, profile: "compact" });
       if (!demoData) setDemoData(data);
+      const evaluation = backtestInput(data, days);
+      if (evaluation.issue) {
+        setError(new Error(evaluation.issue));
+        return;
+      }
       const result = await api.backtest({
-        as_of: data.as_of,
+        as_of: evaluation.origin,
         synthetic: Boolean(data.synthetic),
         seed: data.seed,
         demand_history: data.demand_history,
@@ -29,7 +37,7 @@ export default function BacktestPage() {
         transport_costs: data.transport_costs,
         capacities: data.capacities,
         sku_min_shelf_life_days: data.sku_min_shelf_life_days,
-        evaluation_actuals: (data.evaluation_actuals || []).slice(0, days * data.demand_history.length / 84),
+        evaluation_actuals: evaluation.actuals,
         evaluation_days: days,
         solver_time_limit_seconds: 60,
       });
@@ -83,11 +91,12 @@ export default function BacktestPage() {
     <div className="page-stack">
       <PageHeader eyebrow="Policy evaluation" title="Backtesting" description="Chronological daily replay using the backend’s forecasting, allocation, benchmark, and simulation workflows." actions={<>
         <label className="select-control horizon-select">Evaluation window<select value={days} onChange={(event) => setDays(Number(event.target.value))}><option value={56}>56 days · 8 weekly cycles</option><option value={28}>28 days · 4 weekly cycles</option><option value={14}>14 days · 2 weekly cycles</option><option value={7}>7 days · 1 weekly cycle</option></select></label>
-        <Button icon={Play} onClick={run} disabled={loading}>{loading ? "Running evaluation…" : "Run backtest"}</Button>
+        <Button icon={Play} onClick={run} disabled={loading || Boolean(inputStatus?.issue)}>{loading ? "Running evaluation…" : "Run backtest"}</Button>
       </>} />
       <div className="notice notice-info"><Activity size={17} /><span>The engine supports Optiqo, cheapest-first, and FEFO-first policies. These are not the PRD’s specifically defined B1/B2 methods. Results use the selected dataset and are simulation measurements—not verified real-world savings.</span></div>
       {demoData && <div className="transparency-strip"><span className="transparency-dot" /><strong>{demoData.synthetic ? "SYNTHETIC EVALUATION" : "USER-SUPPLIED EVALUATION"}</strong><span>Seed {demoData.seed ?? "not provided"} · 7-day rolling forecast horizon · {days} held-out days</span></div>}
-      <ErrorNotice error={error} onRetry={run} />
+      {inputStatus?.issue && <div className="notice notice-warning"><Activity size={18} /><span>{inputStatus.issue} <Link to="/app/data">Open Data Validation to download a complete demo JSON or upload a full dataset.</Link></span></div>}
+      <ErrorNotice error={inputStatus?.issue ? null : error} onRetry={run} />
 
       {backtest && <>
         <div className="plan-result-banner">

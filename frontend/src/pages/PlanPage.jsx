@@ -5,6 +5,7 @@ import { api } from "../services/api";
 import { useApp } from "../context/AppContext";
 import { dateTime, number, total } from "../utils/format";
 import { Button, Card, DataTable, EmptyState, ErrorNotice, MetricCard, PageHeader, StatusBadge } from "../components/UI";
+import { planInputIssue } from "../utils/workflowInputs";
 
 export default function PlanPage() {
   const { demoData, setDemoData, plan, setPlan, rememberRun, notify } = useApp();
@@ -12,6 +13,7 @@ export default function PlanPage() {
   const [error, setError] = useState(null);
   const [horizon, setHorizon] = useState(7);
   const [exporting, setExporting] = useState(false);
+  const inputIssue = demoData ? planInputIssue(demoData) : null;
 
   async function generate() {
     setLoading(true);
@@ -19,6 +21,11 @@ export default function PlanPage() {
     try {
       const data = demoData || await api.getDemoData({ seed: 71, profile: "compact" });
       if (!demoData) setDemoData(data);
+      const issue = planInputIssue(data);
+      if (issue) {
+        setError(new Error(issue));
+        return;
+      }
       const result = await api.plan({
         as_of: data.as_of,
         synthetic: Boolean(data.synthetic),
@@ -86,11 +93,12 @@ export default function PlanPage() {
     <div className="page-stack">
       <PageHeader eyebrow="Allocation workspace" title="Distribution plan" description="Generate an engine-backed allocation and inspect its solver status, independent checks, and supporting evidence." actions={<>
         <label className="select-control horizon-select">Planning horizon<select value={horizon} onChange={(event) => setHorizon(Number(event.target.value))}><option value={7}>7 days</option><option value={14}>14 days</option><option value={28}>28 days</option></select></label>
-        <Button icon={loading ? RefreshCw : Truck} onClick={generate} disabled={loading}>{loading ? "Planning…" : "Generate plan"}</Button>
+        <Button icon={loading ? RefreshCw : Truck} onClick={generate} disabled={loading || Boolean(inputIssue)}>{loading ? "Planning…" : "Generate plan"}</Button>
       </>} />
       {demoData && <div className="transparency-strip"><span className="transparency-dot" /><strong>{demoData.synthetic ? "SYNTHETIC INPUT" : "USER INPUT"}</strong><span>{demoData.synthetic ? `Seed ${demoData.seed} · backend demo data` : "User-supplied data; provenance is not independently verified."}</span></div>}
+      {inputIssue && <div className="notice notice-warning"><PackageCheck size={18} /><span>{inputIssue} <Link to="/app/data">Open Data Validation to download or upload a complete dataset.</Link></span></div>}
       {!demoData && <Card className="inline-empty"><PackageCheck size={20} /><div><strong>No planning dataset loaded</strong><p>Generate a plan to load the backend’s compact synthetic dataset or validate uploaded data first.</p></div></Card>}
-      <ErrorNotice error={error} onRetry={generate} />
+      <ErrorNotice error={inputIssue ? null : error} onRetry={generate} />
       {plan && <>
         <div className="plan-result-banner">
           <div className="plan-status-icon"><ShieldCheck size={19} /></div>

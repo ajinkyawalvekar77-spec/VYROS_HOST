@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Optiqo AI/ML engine
 
 Optiqo is a Python library for demand forecasting, batch eligibility, inventory
@@ -110,7 +109,3 @@ confirmed by the product/backend owners.
 
 See [AUDIT_REPORT.md](./AUDIT_REPORT.md) for the implementation audit, evidence,
 and remaining work.
-=======
-# VYROX_SGU_HACKATHON
-StockWise AI is a decision-support system for FMCG supply chains. It targets Supply Chain Managers, Demand Planners, and Warehouse Managers who struggle with uneven stock levels, stockouts, and high transport costs. The core problem is that demand varies regionally while warehouse inventory and shipping costs differ,
->>>>>>> origin/main

@@ -118,6 +118,8 @@ export const api = {
     else params.set("seed", String(seed));
     return jsonRequest(`${endpoints.risk}?${params}`, { signal });
   },
+  riskForDataset: (payload, options = {}) =>
+    jsonRequest(endpoints.riskDataset, { ...options, method: "POST", body: payload }),
   backtest: (payload, options = {}) =>
     jsonRequest(endpoints.backtest, { ...options, method: "POST", body: payload }),
   getRun: (runId, options) => jsonRequest(endpoints.run(runId), options),

@@ -5,6 +5,7 @@ export const endpoints = {
   forecast: "/api/forecast",
   plan: "/api/plan",
   risk: "/api/risk",
+  riskDataset: "/api/risk/dataset",
   backtest: "/api/backtest",
   run: (runId) => `/api/runs/${encodeURIComponent(runId)}`,
   exportRun: (runId, format = "json") =>

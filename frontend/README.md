@@ -21,12 +21,13 @@ npm run dev
 Vite serves the frontend at `http://127.0.0.1:5173`. Development requests to
 `/api` are proxied to `http://127.0.0.1:8000`. Set `VITE_DEV_BACKEND_URL` in
 `.env` to change this proxy destination. For a separately hosted frontend or
-production build, set `VITE_API_BASE_URL` to the backend origin, for example
-`http://127.0.0.1:8000`; the variable is a public API origin, never a secret.
-The production build does not use Vite's development proxy. Configure the
-backend origin or a same-origin `/api` reverse proxy in the hosting
-environment.
-Backend CORS currently allows the local Vite origin `http://127.0.0.1:5173`.
+production build, `frontend/.env.production` sets
+`VITE_API_BASE_URL=https://backend-vyros.onrender.com`. This is a public API
+origin, not a secret. The same value should be configured in the Vercel
+project's Environment Variables for Production. The production build does not
+use Vite's development proxy. Backend CORS must allow the deployed origin
+`https://optiquo.vercel.app`; set
+`OPTIQO_CORS_ORIGINS=https://optiquo.vercel.app` in Render.
 
 ## Backend startup
 
